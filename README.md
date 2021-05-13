@@ -49,6 +49,9 @@ Click on each example to follow the setup instructions.
 ### Chapter 3
 
 - [The BPF Virtual Filesystem](/code/chapter-3/bpf_fs)
+- [The BPF Hash Map](/code/chapter-3/bpf_hash_map/curd)
+- [The BPF Prog Array](/code/chapter-3/bpf_prog_array)
+
 
 ### Chapter 4
 
