@@ -19,6 +19,8 @@
 
 #define _htonl __builtin_bswap32
 
+
+//references https://github.com/torvalds/linux/blob/master/samples/bpf/tc_l2_redirect_kern.c#L22
 #define PIN_GLOBAL_NS		2
 struct bpf_elf_map {
 	__u32 type;
