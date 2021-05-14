@@ -85,3 +85,46 @@ add link to Daniel’s TC example of using Unix-domain sockets.
                 bpftool prog load lcm_map_pinning_save_kern.o /sys/fs/bpf/lcm_map_pinning_save  map name lcmdataset /sys/fs/bpf/lcm/my_dataset 
   
 未来可以看看bpftool源码研究下。 
+
+
+根据研究tc那边，在elf map增加pinging就行了，这个是
+ https://blogs.oracle.com/linux/notes-on-bpf-3
+ 
+ ```
+ 
+ Once bpf_load.c has scanned the ELF headers, it calls bpf_create_map_node() or bpf_create_map_in_map_node() which are implemented in tools/lib/bpf/bpf.c as wrappers to the BPF_MAP_CREATE command for the SYS_BPF syscall.
+
+Unless you are writing tc or lightweight tunnel BPF programs - which, since they implement BPF program loading themselves have their own map loading mechanisms - I'd recommend re-using this code rather than re-inventing the wheel. We can see it's generally a case of defining a map type, key/value sizes and a maximum number of entries.
+
+Programs which use "tc"/"ip route" for loading can utilize a data structure like this (from tc_l2_redirect_kern.c):
+
+#define PIN_GLOBAL_NS           2
+
+struct bpf_elf_map {
+        __u32 type;
+        __u32 size_key;
+        __u32 size_value;
+        __u32 max_elem;
+        __u32 flags;
+        __u32 id;
+        __u32 pinning;
+};    
+
+struct bpf_elf_map SEC("maps") tun_iface = {
+        .type = BPF_MAP_TYPE_ARRAY,
+        .size_key = sizeof(int),
+        .size_value = sizeof(int),
+        .pinning = PIN_GLOBAL_NS,
+        .max_elem = 1,
+
+};
+The bpf_elf_map data structure mirrors that defined in https://git.kernel.org/pub/scm/network/iproute2/iproute2.git/tree/include/bpf_elf.h?h=v4.14.1.
+ 
+ ```
+
+
+内核这边可能可以用 
+https://github.com/torvalds/linux/blob/master/tools/testing/selftests/bpf/progs/test_pinning.c#L8
+
+来在内核的map不用每次新分。
+
